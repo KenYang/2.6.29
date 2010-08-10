@@ -1,0 +1,32 @@
+config SND_SOCLE
+	tristate "Socle Soundcard driver"
+	depends on SND 
+	help
+	  Say y here to include support for Soundcard interface of Socle.
+
+	  To compile this driver as a module, choose M here: the module
+	  will be called snd-socle
+
+choice
+	depends on SND_SOCLE
+	prompt "Socle soundcard type"
+	default SND_SOCLE_NO_DMA
+
+config SND_SOCLE_NO_DMA
+	bool "No dma"
+	help
+	  Say y here to include support for Soundcard interface of Socle.
+
+	  To compile this driver as a module, choose M here: the module
+	  will be called snd-socle
+
+config SND_SOCLE_HW_DMA
+	bool "With hardware dma"
+	help
+	  Say y here to include support for Soundcard interface of Socle.
+
+	  To compile this driver as a module, choose M here: the module
+	  will be called snd-socle-hwdma
+
+endchoice
+

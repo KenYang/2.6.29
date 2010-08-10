@@ -1,0 +1,63 @@
+#include <mach/platform.h>
+
+#define SOCLE_VOP_BASE IO_ADDRESS(SOCLE_VOP0)
+
+#define SOCLE_INTC_VOP IRQ_VOP0
+
+//register address define
+#define SOCLE_VOP_AHBR_CTRL  0x0000
+#define SOCLE_VOP_INTE       0x0004
+#define SOCLE_VOP_INT_STS    0x0008
+#define SOCLE_VOP_STS        0x000C
+#define SOCLE_VOP_CTRL       0x0010
+#define SOCLE_VOP_DRF1SAY    0x0018
+#define SOCLE_VOP_DRF1SACB   0x001C
+#define SOCLE_VOP_DRF1SACR   0x0020
+#define SOCLE_VOP_DRF2SAY    0x0024
+#define SOCLE_VOP_DRF2SACB   0x0028
+#define SOCLE_VOP_DRF2SACR   0x002C
+#define SOCLE_VOP_FBS        0x0030
+#define SOCLE_VOP_FSS        0x0034
+#define SOCLE_VOP_BCS        0x0038
+
+//VOP_AHBR_CTRL
+#define VOP_AHBR_CTRL_SINGLE    0x0
+#define VOP_AHBR_CTRL_INCR      0x1
+#define VOP_AHBR_CTRL_INCR4     0x3
+#define VOP_AHBR_CTRL_INCR8     0x5
+#define VOP_AHBR_CTRL_INCR16    0x7
+
+//VOP_INTE
+#define VOP_INTE_BUFFER_UNDERRUN  (0x1<<1)
+#define VOP_INTE_DISPLAY_COMPLETE (0x1<<0)
+#define VOP_INT_DISABLE 0x0
+
+//VOP_INT_STS
+#define VOP_INT_STS_LINE_NUM_OF_UNDERUN_SHIFT        2
+#define VOP_INT_STS_BUFFER_UNDERUN             (0x1<<1)
+#define VOP_INT_STS_DISPLAY_COMPLETE           (0x1<<0)
+
+//VOP_CTRL
+#define VOP_CTRL_FORMAT_PAL   (0x1<<2)
+#define VOP_CTRL_FORMAT_NTSC  (0x0<<2)
+#define VOP_CTRL_RESET        (0x1<<1)
+#define VOP_CTRL_NO_RESET     (0x0<<1)
+#define VOP_CTRL_DISPLAY_EN   (0x1<<0)
+#define VOP_CTRL_DISPLAY_DIS  (0x0<<0) 
+
+//VOP_FBS
+#define VOP_FBS_CURRENT_DISPLAY_FRAME2  (0x1<<3)
+#define VOP_FBS_CURRENT_DISPLAY_FRAME1  (0x0<<3)
+#define VOP_FBS_CURRENT_FRAME_REPEAT    (0x1<<2)
+#define VOP_FBS_CURRENT_FRAME_FIRST     (0x0<<2)
+#define VOP_FBS_FRAME2_USE_BY_HW        (0x1<<1)
+#define VOP_FBS_FRAME1_USE_BY_HW        (0x1<<0)
+
+//VOP_FSS
+#define VOP_FSS_WIDTH_SHIFT 10
+#define VOP_FSS_HEIGHT_SHIFT 0
+
+//VOP_BCS
+#define VOP_BCS_COLOR_CR_SHIFT 16
+#define VOP_BCS_COLOR_CB_SHIFT 8
+#define VOP_BCS_COLOR_Y_SHIFT 0

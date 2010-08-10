@@ -1,0 +1,69 @@
+config SND_SOC_SOCLE
+        tristate "Socle Soundcard driver"
+	depends on SND
+	help
+	  Say Y or M if you want to add support for codecs attached to
+	  the SOCLE AC97,or I2S interface. You will also need
+	  to select the audio interfaces to support below.
+choice
+	depends on SND_SOC_SOCLE
+	prompt "Socle soundcard type"
+	default SND_SOC_SOCLE_NO_DMA
+
+config SND_SOC_SOCLE_NO_DMA
+	bool "Without hardware dma"
+
+config SND_SOC_SOCLE_HW_DMA
+	bool "With hardware dma"
+
+endchoice
+
+config SND_SOC_SOCLE_AC97
+	tristate "AC97 BUS"
+	select AC97_BUS
+	select SND_SOC_AC97_BUS
+
+choice
+	depends on SND_SOC_SOCLE
+	prompt "Socle soundcard"
+	default SND_SOC_SOCLE_UDA1342TS
+
+config SND_SOC_SOCLE_UDA1342TS
+	depends on SND_SOC_UDA1342TS
+	tristate "SOCLE_UDA1342TS"
+
+config SND_SOC_SOCLE_MS6335
+        depends on SND_SOC_MS6335
+        tristate "SOCLE_MS6335"
+
+config SND_SOC_SOCLE_WM8961
+        depends on SND_SOC_WM8961
+        tristate "SOCLE_WM8961"
+
+config SND_SOC_SOCLE_WM9714_I2S
+	depends on SND_SOC_WM9714
+	tristate "SOCLE_WM9714_I2S"
+
+config SND_SOC_SOCLE_WM9714_AC97
+	tristate "SOCLE_WM9714_AC97"
+	depends on SND_SOC_WM9714
+	select SND_SOC_AC97_CODEC
+	help
+	  Say Y if you want to add support for SoC audio on Socle
+	  with the WM9714.
+
+config SND_SOC_SOCLE_ALC658_AC97
+        tristate "SOCLE_ALC658_AC97"
+        depends on SND_SOC_ALC658
+        select SND_SOC_AC97_CODEC
+        help
+          Say Y if you want to add support for SoC audio on Socle
+          with the WM9714.
+
+endchoice
+
+config AC97_COMPACT_MODE
+	bool "AC97 Audio with Compact Mode"
+	depends on SND_SOC_SOCLE_WM9714_AC97 && SND_SOC_SOCLE_HW_DMA 
+	help
+	  Say y if you want to use Compact Mode for AC97 Controller.
