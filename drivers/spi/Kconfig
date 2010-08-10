@@ -53,6 +53,12 @@ if SPI_MASTER
 
 comment "SPI Master Controller Drivers"
 
+config SPI_DOWNLOAD
+	tristate "download code to FPGA"
+	help
+	  download code to FPGA Board , it use spi channel 1.
+
+
 config SPI_ATMEL
 	tristate "Atmel SPI Controller"
 	depends on (ARCH_AT91 || AVR32)
