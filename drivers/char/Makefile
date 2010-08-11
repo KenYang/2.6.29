@@ -7,6 +7,8 @@
 #
 FONTMAPFILE = cp437.uni
 
+obj-$(CONFIG_SQ_DIA)		+= sq_dia/
+
 obj-y	 += mem.o random.o tty_io.o n_tty.o tty_ioctl.o tty_ldisc.o tty_buffer.o tty_port.o
 
 obj-$(CONFIG_LEGACY_PTYS)	+= pty.o

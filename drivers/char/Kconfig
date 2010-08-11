@@ -4,6 +4,12 @@
 
 menu "Character devices"
 
+config SQ_DIA
+	tristate "Enable Dia function"
+	default m
+	---help---
+	Enable Dia function
+
 config VT
 	bool "Virtual terminal" if EMBEDDED
 	depends on !S390
