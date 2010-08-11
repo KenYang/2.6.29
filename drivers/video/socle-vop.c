@@ -104,11 +104,13 @@ vopStop ()
 static int
 vopSetOutFormat(int format)
 {
-	if(format==FORMAT_NTSC)
+	if(format==FORMAT_NTSC) {
+		VOP_DBG("Out format NTSC\n");
 		socle_vop_write(socle_vop_read(SOCLE_VOP_CTRL) & ~VOP_CTRL_FORMAT_PAL, SOCLE_VOP_CTRL);
-	else if(format==FORMAT_PAL)
+	} else if(format==FORMAT_PAL) {
+		VOP_DBG("Out format PAL\n");		
 		socle_vop_write(socle_vop_read(SOCLE_VOP_CTRL) | VOP_CTRL_FORMAT_PAL, SOCLE_VOP_CTRL);
-	else {
+	} else {
 		printk("VOP : Error Output Format!!\n");
 		return -1;
 	}
@@ -124,7 +126,10 @@ vopSetFrameSize(u32 framesize)
 	if(width>720 || height>480) {
 		printk("VOP: display size error\n");
 		return -1;
-	}		
+	}
+	
+	VOP_DBG(" width=%d height=%d\n",width,height);	
+	
 	addr_y = frame_pa;
   addr_cb = (addr_y + width*height);
   addr_cr = (addr_cb + width*height/4);
@@ -137,6 +142,9 @@ vopSetFrameSize(u32 framesize)
 static int 
 vopSetFrameDisplayAddr(int frameNum, u32 Y_pt, u32 Cb_pt, u32 Cr_pt)
 {
+	
+	VOP_DBG(" frameNum %d addr Y_pt=%d Cb_pt=%d Cr_pt=%d\n",frameNum,Y_pt,Cb_pt,Cr_pt);
+	
 	if(frameNum==FRAME1) {
 		socle_vop_write(Y_pt, SOCLE_VOP_DRF1SAY);
 		socle_vop_write(Cb_pt, SOCLE_VOP_DRF1SACB);
@@ -161,6 +169,7 @@ static int
 vopSetFrameMode(int frame_mode)
 {
 	if(frame_mode==ONE_FRAME) {
+		VOP_DBG("one frame_modeL\n");
 		if (request_irq(SOCLE_INTC_VOP, (irq_handler_t) vopOneFrameIsr, IRQF_DISABLED, "vop", NULL) < 0) {
 			printk("VOP: Can't allocate irq\n");
 	  	return -EBUSY;
@@ -168,6 +177,7 @@ vopSetFrameMode(int frame_mode)
 		}
 	}
 	else if(frame_mode==TWO_FRAME) {
+		VOP_DBG("two frame_modeL\n");		
 		if (request_irq (SOCLE_INTC_VOP, (irq_handler_t) vopTwoFrameIsr, IRQF_DISABLED, "vop", NULL) < 0) {
 			printk("VOP: Can't allocate irq\n");
 	  	return -EBUSY;

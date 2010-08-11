@@ -69,17 +69,28 @@ socle_adc_convert_done(unsigned value)
 	wake_up(adc_dev->wait);
 }
 
+#define ADC_READ_INIT_EN 1
+
 int
 socle_adc_read_data(unsigned int ch)
 {
 	//DECLARE_WAIT_QUEUE_HEAD_ONSTACK(wake);
 	DECLARE_WAIT_QUEUE_HEAD(wake);
 	int ret;
-
+	int temp;
 	DBG("###---start\n");
 	
 	//spin_lock(&adc_lock);
-		
+#if (ADC_READ_INIT_EN == 1)	
+	temp = socle_adc_read(ADC_CTRL, adc_dev->base);
+	temp = temp & (~ADC_INT_MASK) & (~ADC_SOURCE_MASK);
+#if defined(CONFIG_ARCH_PDK_PC9223)
+	temp = (temp | ADC_INT_ENABLE) & (~ADC_POWER_UP);
+#else
+	temp = temp | ADC_POWER_UP | ADC_INT_ENABLE;
+#endif
+	socle_adc_write(ADC_CTRL, temp, adc_dev->base);
+#endif		
 	adc_dev->wait = &wake;
 	adc_dev->result = -1;
 	ret = socle_adc_start(ch);
@@ -94,7 +105,7 @@ socle_adc_read_data(unsigned int ch)
 
 	//spin_unlock(&adc_lock);
 
-	DBG("adc_dev->result = %d\n", adc_dev->result);
+	DBG("ch %d = %d\n", ch,adc_dev->result);
 		
 	return adc_dev->result;
 

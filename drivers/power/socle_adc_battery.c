@@ -110,7 +110,7 @@ static void socle_adc_battery_work(struct work_struct *work)
 	DBG("data = %d\n", data);
 	bat_di->voltage_mV = (data*1000)/312;
 	bat_di->rem_capacity = (bat_di->voltage_mV*100) / SOCLE_ADC_BAT_MAX_VOLTAGE;
-	
+	DBG("voltage_mV = %d, rem_capacity = %d\n", bat_di->voltage_mV,bat_di->rem_capacity);	
 	queue_delayed_work(bat_di->monitor_wqueue, &bat_di->monitor_work, interval);
 }
 
