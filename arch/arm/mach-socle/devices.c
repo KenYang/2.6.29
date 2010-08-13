@@ -911,6 +911,7 @@ struct platform_device socle_spi1_device = {
 
 //20100629 jerry fix for socle_spi_wifi
 static struct spi_board_info socle_spi_board_info[] __initdata = {
+#if ! defined(CONFIG_SQ_GDR)
 //#if defined(CONFIG_WIFI_SOCLE) || defined(CONFIG_WIFI_SOCLE_MODULE)
 #if defined(CONFIG_SOCLE_LIBERTAS_SPI) || defined(CONFIG_SOCLE_LIBERTAS_SPI_MODULE)
 { 
@@ -969,7 +970,7 @@ static struct spi_board_info socle_spi_board_info[] __initdata = {
                 .irq            = IRQ_EXT2,
 #elif defined(CONFIG_ARCH_PDK_PC9223)
 		.chip_select    = 0,
-              .bus_num        = 1,
+              .bus_num        = 1,//1
               .irq            = IRQ_EXT0,
 
 #else
@@ -1022,6 +1023,21 @@ static struct spi_board_info socle_spi_board_info[] __initdata = {
 		.mode = SPI_MODE_0,
 	},
 #endif
+
+#endif//#if ! defined(CONFIG_SQ_GDR)
+//#if defined(CONFIG_SPI_DOWNLOAD) || defined(CONFIG_SPI_DOWNLOAD_MODULE)
+	{
+		.modalias = "sq_spi_download",
+		.platform_data = NULL,
+		.controller_data = NULL,
+		.irq = -1,
+		.max_speed_hz = 2000000, /* 3.0 MHz */
+		.bus_num = 0,//1
+		.chip_select = 0,
+		.mode = SPI_MODE_0,//0		
+	},
+//#endif
+
 };
 
 void __init socle_spi_add_device(void)
@@ -2306,6 +2322,12 @@ void __init socle_add_device_nfc(void)
 void __init socle_add_device_nfc(void) {}
 #endif
 
+#if defined(CONFIG_SQ_GDR)
+void __init socle_del_device_nfc(void) 
+{
+	socle_scu_dev_disable(SOCLE_DEVCON_NFC);
+}
+#endif
 /* --------------------------------------------------------------------
  *  RTC
  * -------------------------------------------------------------------- */

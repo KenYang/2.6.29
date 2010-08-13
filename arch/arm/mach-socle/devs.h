@@ -65,6 +65,12 @@ extern void __init socle_add_device_lcd_lighter(void);		//leonid+
 extern void __init socle_add_device_led_backlight(void);
 
 extern void __init socle_add_device_nfc(void);
+
+#if defined(CONFIG_SQ_GDR)
+extern void __init socle_del_device_nfc(void);
+#endif 
+
+
 extern void __init socle_add_device_on2(void);
 
 #endif

@@ -115,4 +115,12 @@ config F75111_GPIO
 	help
 	   FINTEK F75111 GPIO Controller driver
 
+
+
+config OV7725_GPIO
+	tristate "OV7725_GPIO"
+	help
+	   OV7725_GPIO
+
+
 endmenu

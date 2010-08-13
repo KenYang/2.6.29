@@ -652,10 +652,12 @@ socle_rtc_probe(struct platform_device *pdev)
 
 	//wait for set time really
 	check = tm.tm_year;
+#if !defined(CONFIG_SQ_GDR)	
+	//demo board bug....channninglan
 	do {
 		socle_rtc_get_time(&pdev->dev, &tm);
 	} while (check !=  tm.tm_year);
-
+#endif 
 	ret = request_irq(irq, socle_rtc_irq,
 //			  IRQF_DISABLED,  "socle-rtc", pdev);
 			  IRQF_DISABLED,  "socle-rtc", rtc);

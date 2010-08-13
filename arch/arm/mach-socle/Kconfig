@@ -37,6 +37,7 @@ config ARCH_PDK_PC9223
 	bool "PDK-PC9223"
 	select SOCLE_DMA_PANTHER7_HDMA
 
+
 config ARCH_P7DK
         bool "Panther 7"
         select SOCLE_DMA_PANTHER7_HDMA
@@ -70,4 +71,8 @@ config SOCLE_DMA_PANTHER7_HDMA
 
 config SOCLE_DMA_PL080
 	bool 
+	
+config SQ_GDR
+	bool "SQ_GDR"
+	
 endif

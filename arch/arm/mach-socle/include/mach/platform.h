@@ -37,8 +37,12 @@
 #define SOCLE_MM_DDR_SDR_BANK1			0x40000000
 
 #define SOCLE_NOR_FLASH0       		0x10000000
-#define SOCLE_NOR_FLASH_SIZE            SZ_4M
 
+#if defined(CONFIG_SQ_GDR)
+#define SOCLE_NOR_FLASH_SIZE            SZ_8M
+#else
+#define SOCLE_NOR_FLASH_SIZE            SZ_4M
+#endif
 // APB device base address define
 
 #define SOCLE_ADC0		0x19120000
@@ -74,8 +78,15 @@
 #define SOCLE_SDRSTMC0		0x18000000	
 
 #define SOCLE_LCD0		0x18180000
+
+#if defined(CONFIG_SQ_GDR)
+#define SOCLE_OTG1		0x18080000
+#define SOCLE_OTG0		0x180E0000
+#else
 #define SOCLE_OTG0		0x18080000
 #define SOCLE_OTG1		0x180E0000
+#endif
+
 #define SOCLE_SDHC0		0x180A0000
 #define SOCLE_VIP0		0x18120000
 

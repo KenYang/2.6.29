@@ -297,8 +297,13 @@ static void __init pdk_init(void)
         socle_add_device_otg_udc();
 	socle_add_device_i2c();
 	socle_add_device_adc();
-	socle_add_device_snd_i2s();	
+	socle_add_device_snd_i2s();
+		
+#if !defined(CONFIG_SQ_GDR)		
 	socle_add_device_nfc();
+#else		
+	socle_del_device_nfc();	
+#endif	
 	socle_add_device_vop();
 	socle_add_device_vip();
 	socle_sdhc_add_device_mci();

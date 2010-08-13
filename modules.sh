@@ -11,3 +11,6 @@ make modules
 
 cp -f ./drivers/char/sq_dia/sq-dia.ko $MODULES_DIR
 cp -f ./drivers/spi/sq_spi_download.ko $MODULES_DIR
+
+cp -f ./drivers/i2c/chips/ov7725.ko $MODULES_DIR
+cp -f ./drivers/i2c/busses/sq-i2c-gpio.ko $MODULES_DIR

@@ -1,7 +1,13 @@
+
+
 //#define SPI_DEBUG
 #ifdef SPI_DEBUG
-#define DEBUG
+	#define DEBUG(fmt, args...) printk("\n[sq_spi.c]: " fmt, ## args)
+#else
+	#define DEBUG(fmt, args...)
 #endif
+
+
 
 #include <linux/module.h>
 #include <linux/init.h>
@@ -177,7 +183,7 @@ socle_spi_setup_transfer(struct spi_device *spi, struct spi_transfer *t)
 
 //printk("#-%s-start\n", __func__);
 	dev_dbg(host->dev, "socle_spi_setup_transfer()\n");
-	//printk("socle_spi_setup_transfer()\n");
+	DEBUG("sq_spi_setup_transfer() spi=%x t=%x\n",spi,t);	
 	//socle_spi_base = IO_ADDRESS(host->io_area->start);		//leonid 20090420 del for no use socle_spi_base
 
 	host->spi_dev = spi;
@@ -346,6 +352,7 @@ socle_spi_setup(struct spi_device *spi)
 	int err = 0;
 
 	dev_dbg(host->dev, "socle_spi_setup()\n");
+	DEBUG("sq_spi_setup() bits_per_word=%d\n", spi->bits_per_word); //channignlan
 	
 	//socle_spi_base = IO_ADDRESS(host->io_area->start);		//leonid 20090420 del for no use socle_spi_base
 	
@@ -363,7 +370,9 @@ socle_spi_txrx_bufs(struct spi_device *spi, struct spi_transfer *t)
 	u8 xfer_done = 0;
 	u32 tmp;
 	u32 ret;
-
+#ifdef SPI_DEBUG
+	char *p; //channinglan
+#endif
 	dev_dbg(host->dev, "socle_spi_txrx_bufs()\n");
 	
 	//socle_spi_base = IO_ADDRESS(host->io_area->start);		//leonid 20090420 del for no use socle_spi_base
@@ -371,6 +380,9 @@ socle_spi_txrx_bufs(struct spi_device *spi, struct spi_transfer *t)
 	host->state |= SPIBUSY;
 	
 	host->tx_buf = t->tx_buf;
+#ifdef SPI_DEBUG
+	p = t->tx_buf;//channinglan
+#endif
 	host->rx_buf = t->rx_buf;
 	host->len = GET_TX_LEN(t->len);
 //	host->len = t->len;
@@ -402,6 +414,7 @@ socle_spi_txrx_bufs(struct spi_device *spi, struct spi_transfer *t)
 	/* Write the data into tx fifo first */
 	//FIX send out with out complete done flag  JS 20071220
 	if (host->tx_buf) {
+		DEBUG("\n tx %x %x",*(p),*(p+1)); //channinglan
 		while (SOCLE_SPI_TXFIFO_FULL != (socle_spi_read(SOCLE_SPI_FCR, host->base) & SOCLE_SPI_TXFIFO_FULL)) {
 			host->set_tx(host);
 			if (host->tx_xfer_cnt == host->len) {
@@ -528,6 +541,8 @@ socle_spi_probe(struct platform_device *pdev)
 	int err;
 
 	dev_dbg(&pdev->dev, "socle_spi_probe()\n\n\n");
+	DEBUG("sq_spi_probe()\n");
+
 	master = spi_alloc_master(&pdev->dev, sizeof(struct socle_spi_host));
 	if (NULL == master) {
 		dev_err(&pdev->dev, "No memory for spi_master\n");

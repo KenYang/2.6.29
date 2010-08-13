@@ -9,7 +9,7 @@
 #include <linux/delay.h>
 
 
-#define CONFIG_SQ_SPI_DOWNLOAD_DEBUG
+//#define CONFIG_SQ_SPI_DOWNLOAD_DEBUG
 #ifdef CONFIG_SQ_SPI_DOWNLOAD_DEBUG
 	#define SPI_DOWNLOAD_DBG(fmt, args...) printk("\n[spi_download]: " fmt, ## args)
 #else
@@ -64,6 +64,8 @@ MODULE_PARM_DESC(mask, "GPIO channel mask");
 #define DL_DONE				(0x01 << 1)
 #define DL_RST				(0x01 << 4)
 #define DL_INITB			(0x01 << 0)
+
+
 #define GPIO_2				(0x01 << 2)
 #else
 #define TST_GPIO_G			PJ//PN//PI
@@ -116,11 +118,11 @@ void sq_gpio_set_low(int port,int pin)
 
 void sq_spi_download_write_rst(void)
 {
-	sq_gpio_set_low(PJ,DL_RST);
+	sq_gpio_set_low(TST_GPIO_G,DL_RST);
 		
 	mdelay(100);	
 	SPI_DOWNLOAD_DBG(" write_rst");				
-	sq_gpio_set_high(PJ,DL_RST);
+	sq_gpio_set_high(TST_GPIO_G,DL_RST);
 
 
 }
@@ -135,27 +137,27 @@ Step3:
 */
 void sq_spi_download_write_before(void)
 {
-	unsigned long timeout=0xff;
+//	unsigned long timeout=0xff;
 	
 	
-	//sq_gpio_set_low(PJ,DL_PROGB);	
-	//sq_gpio_set_low(PJ,DL_INITB);					
-	//sq_gpio_set_low(PJ,DL_DONE);		
-	//sq_gpio_set_low(PJ,DL_RST);
-	sq_gpio_get_value_with_mask(PJ,DL_DONE);	
-	sq_gpio_get_value_with_mask(PJ,DL_INITB);	
-//	sq_gpio_in(PJ,DL_DONE);
-//	sq_gpio_in(PJ,DL_INITB);
+	//sq_gpio_set_low(TST_GPIO_G,DL_PROGB);	
+	//sq_gpio_set_low(TST_GPIO_G,DL_INITB);					
+	//sq_gpio_set_low(TST_GPIO_G,DL_DONE);		
+	//sq_gpio_set_low(TST_GPIO_G,DL_RST);
+	sq_gpio_get_value_with_mask(TST_GPIO_G,DL_DONE);	
+	sq_gpio_get_value_with_mask(TST_GPIO_G,DL_INITB);	
+//	sq_gpio_in(TST_GPIO_G,DL_DONE);
+//	sq_gpio_in(TST_GPIO_G,DL_INITB);
 	
 //	sq_spi_download_write_rst();		
-	sq_gpio_set_low(PJ,DL_PROGB);
+	sq_gpio_set_low(TST_GPIO_G,DL_PROGB);
 		
 	udelay(50);	
 	
-	sq_gpio_set_high(PJ,DL_PROGB);
+	sq_gpio_set_high(TST_GPIO_G,DL_PROGB);
 	
 
-	while(sq_gpio_in(PJ,DL_INITB) == 0) {}	//wait 80us
+	while(sq_gpio_in(TST_GPIO_G,DL_INITB) == 0) {}	//wait 80us
 }
 
 
@@ -173,8 +175,8 @@ Step5:
 int sq_spi_download_write_chk(void)
 {
 
-	//sq_gpio_in(PJ,DL_DONE);
-	if(sq_gpio_in(PJ,DL_DONE) != 0) {
+	//sq_gpio_in(TST_GPIO_G,DL_DONE);
+	if(sq_gpio_in(TST_GPIO_G,DL_DONE) != 0) {
 		sq_spi_download_write_rst();
 		return 0;	
 	}
@@ -188,8 +190,8 @@ int sq_spi_download_write_chk(void)
 static ssize_t sq_spi_download_write(struct file *file, const char __user *data,
 				 size_t len, loff_t *ppos)
 {
-	int err = 0,c,i;
-	char *p;
+	int err = 0;
+	//char *p;
 	struct spi_message msg;
 	struct spi_transfer xfer;
 	
@@ -202,8 +204,8 @@ static ssize_t sq_spi_download_write(struct file *file, const char __user *data,
 	/*
 	i=0;
 	while(1) {
-		sq_gpio_set_low(PJ,1<<i);	
-		sq_gpio_set_high(PJ,1<<i);	
+		sq_gpio_set_low(TST_GPIO_G,1<<i);	
+		sq_gpio_set_high(TST_GPIO_G,1<<i);	
 		i++;
 		if(i>0x07)
 			i=0;	
@@ -217,27 +219,27 @@ static ssize_t sq_spi_download_write(struct file *file, const char __user *data,
 	while(i--)
 	{
 	
-	sq_gpio_set_low(PJ,DL_PROGB);	
+	sq_gpio_set_low(TST_GPIO_G,DL_PROGB);	
 	udelay(20);
-	sq_gpio_set_high(PJ,DL_PROGB);						
+	sq_gpio_set_high(TST_GPIO_G,DL_PROGB);						
 	/*	
-	sq_gpio_set_low(PJ,DL_RST);	
+	sq_gpio_set_low(TST_GPIO_G,DL_RST);	
 	udelay(20);
-	sq_gpio_set_high(PJ,DL_RST);	
+	sq_gpio_set_high(TST_GPIO_G,DL_RST);	
 	
 	
-	sq_gpio_set_low(PJ,DL_INITB);
+	sq_gpio_set_low(TST_GPIO_G,DL_INITB);
 	udelay(20);
-	sq_gpio_set_high(PJ,DL_INITB);
+	sq_gpio_set_high(TST_GPIO_G,DL_INITB);
 	
 	
-	sq_gpio_set_low(PJ,DL_DONE);
+	sq_gpio_set_low(TST_GPIO_G,DL_DONE);
 	udelay(20);
-	sq_gpio_set_high(PJ,DL_DONE);
+	sq_gpio_set_high(TST_GPIO_G,DL_DONE);
 	*/	
 	
-	//sq_gpio_in(PJ,DL_INITB);
-	//sq_gpio_in(PJ,DL_DONE);
+	//sq_gpio_in(TST_GPIO_G,DL_INITB);
+	//sq_gpio_in(TST_GPIO_G,DL_DONE);
 	//sq_spi_download_write_rst();
 	
 	}
@@ -355,27 +357,27 @@ static ssize_t sq_spi_download_ioctrl(struct inode *inode,struct file *filp,
 	
 	switch(cmd&0xff){
 	case SET_PROB_LOW:
-		sq_gpio_set_low(PJ,DL_PROGB);		
+		sq_gpio_set_low(TST_GPIO_G,DL_PROGB);		
 		break;
 		
 	case SET_PROB_HIGH:
-		sq_gpio_set_high(PJ,DL_PROGB);
+		sq_gpio_set_high(TST_GPIO_G,DL_PROGB);
 		break;
 		
 	case SET_RST_HIGH:
-		sq_gpio_set_high(PJ,DL_RST);
+		sq_gpio_set_high(TST_GPIO_G,DL_RST);
 		break;
 		
 	case SET_RST_LOW:
-		sq_gpio_set_low(PJ,DL_RST);
+		sq_gpio_set_low(TST_GPIO_G,DL_RST);
 		break;	
 						
 	case GET_INITB:
-		*p = sq_gpio_in(PJ,DL_INITB);
+		*p = sq_gpio_in(TST_GPIO_G,DL_INITB);
 		break;
 		
 	case GET_DONE:
-		*p = sq_gpio_in(PJ,DL_DONE);
+		*p = sq_gpio_in(TST_GPIO_G,DL_DONE);
 		break;		
 		
 	case SET_RST:	
@@ -388,9 +390,9 @@ static ssize_t sq_spi_download_ioctrl(struct inode *inode,struct file *filp,
 		break;	
 		
 	case SET_PROB_LH:
-		sq_gpio_set_low(PJ,DL_PROGB);	
+		sq_gpio_set_low(TST_GPIO_G,DL_PROGB);	
 		udelay(100);			
-		sq_gpio_set_high(PJ,DL_PROGB);
+		sq_gpio_set_high(TST_GPIO_G,DL_PROGB);
 		break;			
 	}
 

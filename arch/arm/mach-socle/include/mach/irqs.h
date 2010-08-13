@@ -50,9 +50,17 @@
 #define	IRQ_UART2    	   		2
 #define	IRQ_UART1        		1
 #define	IRQ_UART0        		0
-#define 	IRQ_PANTHER7_HDMA0 IRQ_HDMA0
+#define IRQ_PANTHER7_HDMA0 		IRQ_HDMA0
+
+
+#if defined(CONFIG_SQ_GDR)
+#define IRQ_OTG1			19
+#define IRQ_OTG0			20
+#else
 #define IRQ_OTG0			19
 #define IRQ_OTG1			20
+#endif
+
 #define	IRQ_VIP0      			18
 #define	IRQ_SDHC0			21
 
