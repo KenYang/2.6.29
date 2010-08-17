@@ -40,9 +40,6 @@
 #include <mach/regs-vip.h>
 
 
-
-//static DEFINE_MUTEX(camera_lock);
-
 /* per video frame buffer */
 struct socle_camera_buffer {
 	struct videobuf_buffer vb; /* v4l buffer must be first */
@@ -74,7 +71,7 @@ static void vip_write(struct socle_camera_dev *priv,
 	iowrite32(data, priv->base + reg_offs);
 }
 
-static unsigned long vip_read(struct socle_camera_dev *priv,
+static unsigned int vip_read(struct socle_camera_dev *priv,
 			      unsigned int reg_offs)
 {
 	return ioread32(priv->base + reg_offs);
@@ -129,12 +126,11 @@ static void free_buffer(struct videobuf_queue *vq,
 static void socle_camera_capture(struct socle_camera_dev *pcdev)
 {
 	if (pcdev->active) {
-			vip_write(pcdev, SOCLE_VIP_CAPTURE_F1SA_Y, (u32)videobuf_to_dma_contig(pcdev->active));
-			vip_write(pcdev, SOCLE_VIP_CAPTURE_F1SA_Cb, (u32)videobuf_to_dma_contig(pcdev->active)+pcdev->cb_off);
-			vip_write(pcdev, SOCLE_VIP_CAPTURE_F1SA_Cr, (u32)videobuf_to_dma_contig(pcdev->active)+pcdev->cr_off);
-			vip_write(pcdev, SOCLE_VIP_FB_SR, vip_read(pcdev, SOCLE_VIP_FB_SR) & ~0x1); 
+		vip_write(pcdev, SOCLE_VIP_CAPTURE_F1SA_Y, (u32)videobuf_to_dma_contig(pcdev->active));
+		vip_write(pcdev, SOCLE_VIP_CAPTURE_F1SA_Cb, (u32)videobuf_to_dma_contig(pcdev->active)+pcdev->cb_off);
+		vip_write(pcdev, SOCLE_VIP_CAPTURE_F1SA_Cr, (u32)videobuf_to_dma_contig(pcdev->active)+pcdev->cr_off);
+		vip_write(pcdev, SOCLE_VIP_FB_SR, vip_read(pcdev, SOCLE_VIP_FB_SR) & ~0x1);
 	}
-	
 }
 
 static int socle_camera_videobuf_prepare(struct videobuf_queue *vq,
@@ -278,10 +274,6 @@ static int socle_camera_add_device(struct soc_camera_device *icd)
 	if (ret)
 		goto err;
 
-	
-	
-	
-
 	pcdev->icd = icd;
 err:
 
@@ -330,7 +322,7 @@ static int socle_camera_set_bus_param(struct soc_camera_device *icd,
 
 	if(!(common_flags & SOCAM_DATAWIDTH_8))
 		return -EINVAL;
-	
+
 	//set output format
 	switch (pixfmt) {
 		case V4L2_PIX_FMT_YUV420:
@@ -358,9 +350,7 @@ static int socle_camera_set_bus_param(struct soc_camera_device *icd,
 	return 0;
 }
 
-#if 0
-static int socle_camera_try_bus_param(struct soc_camera_device *icd,
-				       __u32 pixfmt)
+static int socle_camera_try_bus_param(struct soc_camera_device *icd)
 {
 	struct soc_camera_host *ici = to_soc_camera_host(icd->dev.parent);
 	struct socle_camera_dev *pcdev = ici->priv;
@@ -369,24 +359,111 @@ static int socle_camera_try_bus_param(struct soc_camera_device *icd,
 	camera_flags = icd->ops->query_bus_param(icd);
 	common_flags = soc_camera_bus_param_compatible(camera_flags,
 						       pcdev->pdata->flags);
-	//printk("camera_flags=%lx, common_flags=%lx\n",camera_flags,common_flags);
 	if (!common_flags)
 		return -EINVAL;
 
 	return 0;
 }
-#endif
 
-static int socle_camera_set_fmt_cap(struct soc_camera_device *icd,
-				     __u32 pixfmt, struct v4l2_rect *rect)
+static const struct soc_camera_data_format socle_camera_formats[] = {
+	{
+		.name		= "YUV420 12 bit",
+		.depth		= 12,
+		.fourcc		= V4L2_PIX_FMT_YUV420,
+		.colorspace	= V4L2_COLORSPACE_JPEG,
+	},
+	{
+		.name		= "Planar YUV422 16 bit",
+		.depth		= 16,
+		.fourcc		= V4L2_PIX_FMT_YUV422P,
+		.colorspace	= V4L2_COLORSPACE_JPEG,
+	},
+};
+
+static int socle_camera_get_formats(struct soc_camera_device *icd, int idx,
+				     struct soc_camera_format_xlate *xlate)
 {
-	return icd->ops->set_fmt(icd, pixfmt, rect);
+	struct soc_camera_host *ici = to_soc_camera_host(icd->dev.parent);
+	int ret, k, n;
+	int formats = 0;
+
+	ret = socle_camera_try_bus_param(icd);
+	if (ret < 0)
+		return 0;
+
+	switch (icd->formats[idx].fourcc) {
+	case V4L2_PIX_FMT_YUV420:
+	case V4L2_PIX_FMT_YUV422P:
+		n = ARRAY_SIZE(socle_camera_formats);
+		formats += n;
+		for (k = 0; xlate && k < n; k++) {
+			xlate->host_fmt = &socle_camera_formats[k];
+			xlate->cam_fmt = icd->formats + idx;
+			xlate->buswidth = icd->formats[idx].depth;
+			xlate++;
+			dev_dbg(&ici->dev, "Providing format %s using %s\n",
+				socle_camera_formats[k].name,
+				icd->formats[idx].name);
+		}
+	default:
+		/* Generic pass-through */
+		formats++;
+		if (xlate) {
+			xlate->host_fmt = icd->formats + idx;
+			xlate->cam_fmt = icd->formats + idx;
+			xlate->buswidth = icd->formats[idx].depth;
+			xlate++;
+			dev_dbg(&ici->dev,
+				"Providing format %s in pass-through mode\n",
+				icd->formats[idx].name);
+		}
+	}
+
+	return formats;
 }
 
-static int socle_camera_try_fmt_cap(struct soc_camera_device *icd,
+static int socle_camera_set_fmt(struct soc_camera_device *icd,
+				     __u32 pixfmt, struct v4l2_rect *rect)
+{
+	struct soc_camera_host *ici = to_soc_camera_host(icd->dev.parent);
+//	struct socle_camera_dev *pcdev = ici->priv;
+	const struct soc_camera_format_xlate *xlate;
+	int ret;
+
+	if (!pixfmt)
+		return icd->ops->set_fmt(icd, pixfmt, rect);
+
+	xlate = soc_camera_xlate_by_fourcc(icd, pixfmt);
+	if (!xlate) {
+		dev_warn(&ici->dev, "Format %x not found\n", pixfmt);
+		return -EINVAL;
+	}
+
+	ret = icd->ops->set_fmt(icd, xlate->cam_fmt->fourcc, rect);
+
+	if (!ret) {
+		icd->buswidth = xlate->buswidth;
+		icd->current_fmt = xlate->host_fmt;
+//		pcdev->camera_fmt = xlate->cam_fmt;
+	}
+
+	return ret;
+}
+
+static int socle_camera_try_fmt(struct soc_camera_device *icd,
 				     struct v4l2_format *f)
 {
-	int ret;
+	struct soc_camera_host *ici = to_soc_camera_host(icd->dev.parent);
+	const struct soc_camera_format_xlate *xlate;
+	__u32 pixfmt = f->fmt.pix.pixelformat;
+	int ret = 0;
+
+	xlate = soc_camera_xlate_by_fourcc(icd, pixfmt);
+	if (!xlate) {
+		dev_warn(&ici->dev, "Format %x not found\n", pixfmt);
+		return -EINVAL;
+	}
+
 	/* FIXME: calculate using depth and bus width */
 
 	if (f->fmt.pix.height < 240)
@@ -400,12 +477,16 @@ static int socle_camera_try_fmt_cap(struct soc_camera_device *icd,
 	f->fmt.pix.width &= ~0x03;
 	f->fmt.pix.height &= ~0x03;
 
+	f->fmt.pix.bytesperline = f->fmt.pix.width * xlate->host_fmt->depth;
+	f->fmt.pix.sizeimage = f->fmt.pix.height * f->fmt.pix.bytesperline;
+
+	// avoid to use default sensor resolution
+#if 0
 	/* limit to sensor capabilities */
-//	return icd->ops->try_fmt(icd, f);
 	ret = icd->ops->try_fmt(icd, f);
 	if (ret < 0)
 		return ret;
-
+#endif
 	switch (f->fmt.pix.field) {
 	case V4L2_FIELD_INTERLACED:
 		break;
@@ -487,8 +568,9 @@ static struct soc_camera_host_ops socle_camera_host_ops = {
 	.owner		= THIS_MODULE,
 	.add		= socle_camera_add_device,
 	.remove		= socle_camera_remove_device,
-	.set_fmt	= socle_camera_set_fmt_cap,
-	.try_fmt	= socle_camera_try_fmt_cap,
+	.get_formats	= socle_camera_get_formats,
+	.set_fmt	= socle_camera_set_fmt,
+	.try_fmt	= socle_camera_try_fmt,
 	.reqbufs	= socle_camera_reqbufs,
 	.poll		= socle_camera_poll,
 	.querycap	= socle_camera_querycap,
@@ -622,72 +704,9 @@ static int socle_camera_remove(struct platform_device *pdev)
 	return 0;
 }
 
-#if 0
-static int socle_vip_camera_runtime_nop(struct device *dev)
-{
-	/* Runtime PM callback shared between ->runtime_suspend()
-	 * and ->runtime_resume(). Simply returns success.
-	 *
-	 * This driver re-initializes all registers after
-	 * pm_runtime_get_sync() anyway so there is no need
-	 * to save and restore registers here.
-	 */
-	return 0;
-}
-#endif
-
-#ifdef CONFIG_PM
-
-// 2010/06/08 cyli add power management
-
-static u32 socle_vip_regs[SOCLE_VIP_L_SFT / 4 + 1];
-
-static int socle_vip_camera_suspend(struct device *dev)
-{
-	struct platform_device *pdev = to_platform_device(dev);
-	struct socle_camera_dev *pcdev = platform_get_drvdata(pdev);
-	int i;
-
-	for (i = 0; i < (SOCLE_VIP_L_SFT / 4 + 1); i++)
-		socle_vip_regs[i] = vip_read(pcdev, i * 4);
-		//socle_vip_regs[i] = vip_read(pcdev, (unsigned long)(i * 4));
-
-	return 0;
-}
-
-static int socle_vip_camera_resume(struct device *dev)
-{
-	struct platform_device *pdev = to_platform_device(dev);
-	struct socle_camera_dev *pcdev = platform_get_drvdata(pdev);
-	int i, offset;
-
-	for (i = 0; i < (SOCLE_VIP_L_SFT / 4 + 1); i++) {
-		offset = i * 4;
-		if ((SOCLE_VIP_CTRL == offset) || (SOCLE_VIP_RESET == offset))
-			continue;
-		vip_write(pcdev, offset, socle_vip_regs[i]);
-	}
-	vip_write(pcdev, SOCLE_VIP_CTRL, socle_vip_regs[SOCLE_VIP_CTRL / 4]);
-
-	return 0;
-}
-
-#else
-#define socle_vip_camera_suspend	NULL
-#define socle_vip_camera_resume	NULL
-#endif
-
-static struct dev_pm_ops socle_vip_camera_dev_pm_ops = {
-	.suspend = socle_vip_camera_suspend,
-	.resume = socle_vip_camera_resume,
-	//.runtime_suspend = socle_vip_camera_runtime_nop,
-	//.runtime_resume = socle_vip_camera_runtime_nop,
-};
-
 static struct platform_driver socle_camera_driver = {
 	.driver 	= {
 		.name	= "socle_camera",
-		.pm	= &socle_vip_camera_dev_pm_ops,
 	},
 	.probe		= socle_camera_probe,
 	.remove		= socle_camera_remove,
