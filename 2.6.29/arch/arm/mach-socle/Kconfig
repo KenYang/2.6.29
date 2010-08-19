@@ -1,0 +1,78 @@
+if ARCH_SOCLE
+
+comment "Socle Platform Implementations"
+
+choice
+        prompt "Platform Type"
+        default CONFIG_ARCH_LDK3V21
+
+config ARCH_LDK3V21
+	bool "Leopard 3 V2.1"
+	select SOCLE_DMA_A2A
+	select MMC_SOCLE_SDMMC_AUTO_SWAP
+	 	  	  
+config ARCH_LDK5
+	bool "Leopard 5"
+	
+config ARCH_CDK
+	bool "Cheetah C1"  
+	select SOCLE_DMA_HDMA
+	select SOCLE_DMA_PANTHER7_HDMA
+
+config ARCH_SCDK
+        bool "SCDK"
+        select SOCLE_DMA_HDMA
+        select SOCLE_DMA_PANTHER7_HDMA
+	
+config ARCH_PDK_PC9002
+	bool "PDK-PC9002"
+	select SOCLE_DMA_HDMA
+        select SOCLE_DMA_PANTHER7_HDMA
+
+config ARCH_PDK_PC9220
+	bool "PDK-PC9220"
+	select SOCLE_DMA_PANTHER7_HDMA
+
+config ARCH_PDK_PC9223
+	bool "PDK-PC9223"
+	select SOCLE_DMA_PANTHER7_HDMA
+
+
+config ARCH_P7DK
+        bool "Panther 7"
+        select SOCLE_DMA_PANTHER7_HDMA
+
+config ARCH_PDK_PC7210
+	bool "PDK-PC7210 / PDK-PC7230"
+	select SOCLE_DMA_PANTHER7_HDMA
+
+config ARCH_MSMV
+        bool "MSMV"
+        select SOCLE_DMA_PANTHER7_HDMA
+
+config ARCH_MDK_3D
+	bool "MDK-3D"
+	select SOCLE_DMA_PANTHER7_HDMA
+
+config ARCH_MDK_FHD
+	bool "MDK-FHD"
+	select SOCLE_DMA_PL080
+
+endchoice
+
+config SOCLE_DMA_A2A
+	bool
+
+config SOCLE_DMA_HDMA
+	bool
+
+config SOCLE_DMA_PANTHER7_HDMA
+	bool 
+
+config SOCLE_DMA_PL080
+	bool 
+	
+config SQ_GDR
+	bool "SQ_GDR"
+	
+endif

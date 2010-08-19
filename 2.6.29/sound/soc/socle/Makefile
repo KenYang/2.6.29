@@ -1,0 +1,9 @@
+obj-$(CONFIG_SND_SOC_SOCLE) += socle-i2s.o 
+obj-$(CONFIG_SOCLE_DMA_PL080) += socle-pcm.o
+obj-$(CONFIG_SOCLE_DMA_PANTHER7_HDMA) += socle-pcm-hdma.o
+obj-$(CONFIG_SND_SOC_SOCLE_UDA1342TS) += socle_uda1342ts.o
+obj-$(CONFIG_SND_SOC_SOCLE_MS6335) += socle_ms6335.o
+obj-$(CONFIG_SND_SOC_SOCLE_WM8961) += socle_wm8961.o
+obj-$(CONFIG_SND_SOC_SOCLE_WM9714_I2S) += socle_wm9714_i2s.o socle-ac97-i2s.o
+obj-$(CONFIG_SND_SOC_SOCLE_WM9714_AC97) += socle_wm9714_ac97.o socle-ac97.o
+obj-$(CONFIG_SND_SOC_SOCLE_ALC658_AC97) += socle_wm9714_ac97.o socle-ac97.o
