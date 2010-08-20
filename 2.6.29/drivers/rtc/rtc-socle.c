@@ -16,10 +16,11 @@
     
 *   Version      : 2,0,0,1
 *   History      : 
-*      1. 2006/08/25 ryan chen create this file
+*    1. 2006/08/25 ryan chen create this file
 *	 2. 2006/12/25 cyli modify this file
 *	 3. 2010/06/09 cyli add power management
 *	 4. 2010/08/18 cyli modify alarm month setting
+*	 5. 2010/08/20 cyli modify for booting update time
 * 
 ********************************************************************************/
 
@@ -504,7 +505,6 @@ static struct rtc_class_ops socle_rtcops = {
 	.irq_set_freq   = socle_rtc_setfreq,
 };
 
-#if 0
 static void 
 socle_rtc_enable(struct platform_device *pdev, int en)
 {
@@ -531,7 +531,6 @@ socle_rtc_enable(struct platform_device *pdev, int en)
 
 	spin_unlock_irq(&socle_rtc_lock);
 }
-#endif
 
 static int
 socle_rtc_remove(struct platform_device *dev)
@@ -554,7 +553,7 @@ socle_rtc_probe(struct platform_device *pdev)
 	struct resource *res = NULL;
 	int ret;
 	struct rtc_time tm;
-	int check;
+	u32 check, update = 0;
 
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!res) {
@@ -587,34 +586,35 @@ socle_rtc_probe(struct platform_device *pdev)
 	socle_rtc_base = rtc_regs;
 	RTCDBUG("socle_rtc_base=%p\n", socle_rtc_base);
 
+	// check RTC run or not
+	if (!readl(SOCLE_RTC_TIME))
+		update = 1;
 
 	/*	20080324 leonid+ for pdk-pc7210 RTC initinal	*/
 #if defined(CONFIG_ARCH_LDK5) || defined(CONFIG_ARCH_P7DK)  || defined(CONFIG_ARCH_PDK_PC7210) || defined(CONFIG_ARCH_PDK_PC9220) || defined(CONFIG_ARCH_PDK_PC9223)
-{
-	u32 check_t;
-	RESET_RTC_CIRCUIT();
+	if (update) {
+		RESET_RTC_CIRCUIT();
 
-/*	check if time has work	*/
-	check_t = readl(SOCLE_RTC_TIME);
-	msleep(1);
-	//CY T. modify for Warning message 20081224
-	if (check_t == readl(SOCLE_RTC_TIME)){
-		printk("Resetting RTC counter...\n");
-		RESET_RTC_COUNTER();
+		/*	check if time has work	*/
+		check = readl(SOCLE_RTC_TIME);
+		msleep(1);
+		//CY T. modify for Warning message 20081224
+		if (check == readl(SOCLE_RTC_TIME)){
+			printk("Resetting RTC counter...\n");
+			RESET_RTC_COUNTER();
+		}
 	}
-}
 
 //        if (RTC_IS_PWFAIL) {
 //                printk("Warning: RTC Power Fail!!\n");
 //                printk("\tPlease change your battery and then reset RTC again...\n");
 //        }
 #if 0
-        while (!RTC_IS_GOOD) {
-                printk("Resetting RTC control circuit...\n");
-                RESET_RTC_CIRCUIT();
-        }
+	while (!RTC_IS_GOOD) {
+		printk("Resetting RTC control circuit...\n");
+		RESET_RTC_CIRCUIT();
+	}
 #endif
-
 	if (!RTC_IS_GOOD) {
 		printk("Warning: RTC is using perpetual power!!\n");
 		return 0;
@@ -631,30 +631,35 @@ socle_rtc_probe(struct platform_device *pdev)
 	platform_set_drvdata(pdev, rtc);
 	device_init_wakeup(&pdev->dev, 1);
 
-	rtc_ctrl_reg = readl(SOCLE_RTC_CTRL);
+	if (update) {
+		//set freq
+		rtc->irq_freq = 16;
+		socle_rtc_setfreq(&pdev->dev, rtc->irq_freq);
 
-	//set freq
-	rtc->irq_freq = 16;
-	socle_rtc_setfreq(&pdev->dev, rtc->irq_freq);
+		//Initial time
+		tm.tm_wday = 2;
+		tm.tm_year = 1970 - 1900;
+		tm.tm_mon = 1 - 1;
+		tm.tm_mday = 1;
+		tm.tm_hour = 0;
+		tm.tm_min = 0;
+		tm.tm_sec = 0;
 
-//	socle_rtc_enable(pdev, 1);
+		socle_rtc_set_time(&pdev->dev, &tm);
+#if 0
+		//wait for set time really
+		check = tm.tm_year;
+		do {
+			socle_rtc_get_time(&pdev->dev, &tm);
+		} while (check != tm.tm_year);
+#endif
+	} else {
+		//set freq
+		rtc->irq_freq = 16;
+		socle_rtc_setfreq(&pdev->dev, rtc->irq_freq);
 
-	//Initial time
-	tm.tm_wday = 2;
-	tm.tm_year = 1970 - 1900;
-	tm.tm_mon = 1 - 1;
-	tm.tm_mday = 1;
-	tm.tm_hour = 0;
-	tm.tm_min = 0;
-	tm.tm_sec = 0;
-
-	socle_rtc_set_time(&pdev->dev, &tm);
-
-	//wait for set time really
-	check = tm.tm_year;
-	do {
-		socle_rtc_get_time(&pdev->dev, &tm);
-	} while (check !=  tm.tm_year);
+		socle_rtc_enable(pdev, 1);
+	}
 
 	ret = request_irq(irq, socle_rtc_irq,
 //			  IRQF_DISABLED,  "socle-rtc", pdev);
