@@ -199,7 +199,12 @@ static ssize_t sq_spi_download_write(struct file *file, const char __user *data,
 	//char *p;
 	struct spi_message msg;
 	struct spi_transfer xfer;
-	char buf[128];
+	//char buf[128];
+	char *buf;
+	
+	buf = kmalloc(len,GFP_KERNEL);
+	
+	
 	
 	if(copy_from_user(buf,data,len)) {
 		return -EFAULT;
@@ -271,7 +276,7 @@ static ssize_t sq_spi_download_write(struct file *file, const char __user *data,
 	memset(&xfer, 0, sizeof(struct spi_transfer));
 	
 	//SPI_DOWNLOAD_DBG(" bits_per_word= %d",msg.spi->bits_per_word);	
-	xfer.tx_buf = data;	
+	xfer.tx_buf = buf;	
 	
 
 	
@@ -291,6 +296,8 @@ static ssize_t sq_spi_download_write(struct file *file, const char __user *data,
 	} while (sq_spi_download_write_chk() != 0 );
 #endif
 #endif
+
+	kfree(buf);
 
 //	SPI_DOWNLOAD_DBG(" <============== sq_spi_download_write end ===============>");
 	return 0;	
