@@ -61,6 +61,14 @@
             }                                                           	\
         }
 
+//#define SQ_MDIO_DBG
+#ifdef SQ_MDIO_DBG
+	#define MDIO_DBG(fmt, args...) printk("\nMDIO: " fmt, ## args)
+#else
+	#define MDIO_DBG(fmt, args...)
+#endif
+//#define CONFIG_SQ_NO_PHY	
+
 
 /*******************************************************************************
 *
@@ -68,6 +76,40 @@
 *
 * RETURNS: the contents of a PHY device register.
 */
+
+int mii_reg[]={
+0x3100,	
+0x786d,
+0x243,
+0xc54,
+0x1e1,
+0x41e1,
+};
+
+int data_flag = 0;
+
+/*
+MDIO: phyAdrs = 0x0 ,phyReg = 0x2 retVal = 0xffff
+MDIO:MII ID0<ffff>
+MDIO: phyAdrs = 0x1 ,phyReg = 0x2 retVal = 0x243
+MDIO:MII ID0<0243>
+MDIO: phyAdrs = 0x1 ,phyReg = 0x3 retVal = 0xc54
+MDIO:MII ID1<0c54>
+MDIO:MII PHY #1
+MDIO: phyAdrs = 0x1 ,phyReg = 0x0 retVal = 0x3100
+MDIO: phyAdrs = 0x1 ,phyReg = 0x4 retVal = 0x1e1
+MDIO: phyAdrs = 0x1 ,phyReg = 0x1 retVal = 0x786d
+MDIO: phyAdrs = 0x1 ,phyReg = 0x0 data = 0x1200
+MDIO: phyAdrs = 0x1 ,phyReg = 0x1 retVal = 0x7849<7>Probe MAC module at <f7060000> IRQ 15 : Pass		
+MDIO: phyAdrs = 0x1 ,phyReg = 0x0 data = 0x1200
+MDIO: phyAdrs = 0x1 ,phyReg = 0x1 retVal = 0x784
+MDIO: phyAdrs = 0x1 ,phyReg = 0x1 retVal = 0x786d<6>eth0: MII PHY 1 : Get New Media Link.
+MDIO: phyAdrs = 0x1 ,phyReg = 0x1 retVal = 0x786d
+MDIO: phyAdrs = 0x1 ,phyReg = 0x5 retVal = 0x41e1<6>eth0: Set Media Mode <100M><Full>
+MDIO: phyAdrs = 0x1 ,phyReg = 0x1 retVal = 0x786d
+MDIO: phyAdrs = 0x1 ,phyReg = 0x5 retVal = 0x41e1
+*/
+
 u16 sMacMiiPhyRead
     (
     struct net_device	*	pDrvCtrl,		/* pointer to device control structure */
@@ -80,6 +122,24 @@ struct socle_mac_private *cap = netdev_priv(pDrvCtrl);
 unsigned long flags;
 u16 retVal=0;
 
+#ifdef CONFIG_SQ_NO_PHY
+	if(phyAdrs == 0x01) {	
+		if(phyReg < (sizeof(mii_reg)/4)) {
+			
+			if( data_flag == 0x1200) {
+				data_flag = 0;	
+				retVal = 0x7849;
+			} else {
+				retVal = (mii_reg[phyReg]);
+			}
+		} else {
+			retVal = 0xffff;				
+		}				
+	} else {
+		retVal = 0xffff;
+	}
+
+#else
 	spin_lock_irqsave(&cap->mii_lock, flags);
 	
     /* Write 34-bit preamble */
@@ -104,6 +164,9 @@ u16 retVal=0;
 
 	spin_unlock_irqrestore(&cap->mii_lock, flags);
 	
+#endif	
+	MDIO_DBG("phyAdrs = 0x%x ,phyReg = 0x%x retVal = 0x%x",phyAdrs,phyReg,retVal);
+	
     return (retVal);
 }
 
@@ -126,6 +189,13 @@ void sMacMiiPhyWrite
 struct socle_mac_private *cap = netdev_priv(pDrvCtrl);
 unsigned long flags;
 
+#ifdef CONFIG_SQ_NO_PHY
+	if(phyAdrs == 0x01) {	
+		if(phyReg == 0x00) {
+			data_flag = data;
+		}}
+#endif 
+
 	spin_lock_irqsave(&cap->mii_lock, flags);
 
     /* write 34-bit preamble */
@@ -145,4 +215,6 @@ unsigned long flags;
     sMAC_MII_WRITE (pDrvCtrl->base_addr, data, 16);
     
     spin_unlock_irqrestore(&cap->mii_lock, flags);
+ 
+	MDIO_DBG("phyAdrs = 0x%x ,phyReg = 0x%x data = 0x%x",phyAdrs,phyReg,data);    
 }

@@ -98,6 +98,16 @@
 #endif
 
 
+#define SQ_MAC_DBG
+#ifdef SQ_MAC_DBG
+	#define MAC_DBG(fmt, args...) printk("\nMDIO: " fmt, ## args)
+#else
+	#define MAC_DBG(fmt, args...)
+#endif
+
+
+
+
 /* SOCLE_MAC:
 	For ARM and MIPS processors, endianess can be either big or little
 	depending on how the hardware is wired and configured.  The SOCLE MAC
@@ -696,8 +706,11 @@ int socle_mac_mii_scan(struct net_device *pDrvCtrl)		/* pointer to device contro
 	/* Find first PHY attached to Socle MAC */
 	for (phyAddr = 0; phyAddr < MAC_MAX_PHY; phyAddr++){
 		phy_id0 = sMacMiiPhyRead(pDrvCtrl, phyAddr, MII_PHY_ID0);
+		MAC_DBG("\nMII ID0<%4.4x> \n",phy_id0);		//channing
+
 	    if (phy_id0 == PHY_ID0){ 
 	    	phy_id1 = sMacMiiPhyRead(pDrvCtrl, phyAddr, MII_PHY_ID1);
+			MAC_DBG("\nMII ID1<%4.4x> \n",phy_id1);		//channing
 	   		if (phy_id1 == PHY_ID1){ 
 				if (mac_debug_level > NETIF_MSG_DRV)
 				printk(MAC_KERN_DEBUG "%s:  MII PHY #%d : ID0<%4.4x> ID1<%4.4x>\n",
@@ -734,7 +747,9 @@ void socle_mac_phy_clock_on_test(void)
 		
 		cr = sMacMiiPhyRead(socle_mac, cap->phys, MII_PHY_CR);
 		sMacMiiPhyWrite(socle_mac, cap->phys, MII_PHY_CR, (cr & ~MII_PHY_CR_OFF));
+
 		cr = sMacMiiPhyRead(socle_mac, cap->phys, MII_PHY_CR);
+
 		//printk("PHY reg0 : %x\n", sMacMiiPhyRead(socle_mac, cap->phy, MII_PHY_CR));
 		//printk("mac phy clock on\n");
 
@@ -773,6 +788,7 @@ void socle_mac_phy_clock_off_test(void)
 		cr = sMacMiiPhyRead(socle_mac, cap->phys, MII_PHY_CR);
 		sMacMiiPhyWrite(socle_mac, cap->phys, MII_PHY_CR, (cr | MII_PHY_CR_OFF));
 		cr = sMacMiiPhyRead(socle_mac, cap->phys, MII_PHY_CR);
+
 		//printk("PHY reg0 : %x\n", sMacMiiPhyRead(socle_mac, cap->phy, MII_PHY_CR));
 		//printk("mac phy clock off\n");
 

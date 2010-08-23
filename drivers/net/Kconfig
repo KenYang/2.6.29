@@ -241,6 +241,11 @@ config SOCLE_RMII
           To run the RMII interface, please choose Y. It will running the SOCLE 
           MAC w/ RMII interface within SOCLE xDK platform.
 
+config SQ_NO_PHY
+        bool "SQ MAC device driver remove PHY"
+        depends on SOCLE_ETHER
+        ---help---
+	remove phy
 
 config AX88796
 	tristate "ASIX AX88796 NE2000 clone support"

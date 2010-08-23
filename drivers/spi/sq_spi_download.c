@@ -9,6 +9,11 @@
 #include <linux/delay.h>
 
 
+#include <linux/poll.h>
+
+
+
+
 //#define CONFIG_SQ_SPI_DOWNLOAD_DEBUG
 #ifdef CONFIG_SQ_SPI_DOWNLOAD_DEBUG
 	#define SPI_DOWNLOAD_DBG(fmt, args...) printk("\n[spi_download]: " fmt, ## args)
@@ -194,6 +199,11 @@ static ssize_t sq_spi_download_write(struct file *file, const char __user *data,
 	//char *p;
 	struct spi_message msg;
 	struct spi_transfer xfer;
+	char buf[128];
+	
+	if(copy_from_user(buf,data,len)) {
+		return -EFAULT;
+	}
 	
 	SPI_DOWNLOAD_DBG(" write len=0x%x =>",len);
 
@@ -262,6 +272,9 @@ static ssize_t sq_spi_download_write(struct file *file, const char __user *data,
 	
 	//SPI_DOWNLOAD_DBG(" bits_per_word= %d",msg.spi->bits_per_word);	
 	xfer.tx_buf = data;	
+	
+
+	
 //	xfer.tx_buf = tx_buf;	
 	xfer.len = SET_TX_RX_LEN(len, 0);
 	spi_message_add_tail(&xfer, &msg);
