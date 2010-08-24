@@ -198,11 +198,37 @@ static struct mtd_partition nor_partitions[] = {
 	},
 #endif
 	{
-	      .name		= "data",
+	      .name		= "root-filesystem",
 	      .offset		= MTDPART_OFS_APPEND,
-	      .size			= MTDPART_SIZ_FULL,
+	      .size			= 0x300000,
 	      .mask_flags	= 0, /* force read-only */	      
-	}
+	},
+#if 1
+	{
+	      .name		= "ap",
+	      .offset		= MTDPART_OFS_APPEND,
+	      .size			= 0x100000,
+	      .mask_flags	= 0, /* force read-only */	      
+	},
+	{
+	      .name		= "download_bin",
+	      .offset		= MTDPART_OFS_APPEND,
+	      .size			= 0x20000,
+	      .mask_flags	= 0, /* force read-only */	      
+	},
+	{
+	      .name		= "configure_1",
+	      .offset		= MTDPART_OFS_APPEND,
+	      .size			= 0x20000,
+	      .mask_flags	= 0, /* force read-only */	      
+	},
+	{
+	      .name		= "configure2",
+	      .offset		= MTDPART_OFS_APPEND,
+	      .size			= 0x20000,
+	      .mask_flags	= 0, /* force read-only */	      
+	},
+#endif
 };
 
 static struct flash_platform_data socle_nor_data = {
@@ -1031,7 +1057,7 @@ static struct spi_board_info socle_spi_board_info[] __initdata = {
 		.platform_data = NULL,
 		.controller_data = NULL,
 		.irq = -1,
-		.max_speed_hz = 2000000, /* 3.0 MHz */
+		.max_speed_hz = 4000000, /* 3.0 MHz */
 		.bus_num = 0,//1
 		.chip_select = 0,
 		.mode = SPI_MODE_0,//0		

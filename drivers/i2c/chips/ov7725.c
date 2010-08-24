@@ -2,7 +2,7 @@
 #include <mach/gpio.h>
 #include <linux/delay.h>
 
-#define	DEBUG
+//#define	DEBUG
 
 #ifdef DEBUG
 	#define	dbg(fmt, arg...)	printk(fmt, ##arg)
@@ -26,7 +26,7 @@ struct ov7725_data {
 
 static int ov7725_reset(void)
 {
-	dbg("reset ov7725 start:no. 006\n");
+	dbg("ov7725 reset signal\n");
 	socle_gpio_claim_lock();
 	socle_gpio_direction_output_with_mask(OV7725_RESET1_GPIO, OV7725_RESET1_MASK);
 	socle_gpio_set_value_with_mask(OV7725_RESET1_GPIO, 0<<OV7725_RESET1_MASK, 1<<OV7725_RESET1_MASK);

@@ -19,7 +19,8 @@
 *      1. 2006/08/25 ryan chen create this file
 *	 2. 2006/12/25 cyli modify this file
 *	 3. 2010/06/09 cyli add power management
-*    
+*	 4. 2010/08/18 cyli modify alarm month setting
+* 
 ********************************************************************************/
 
 #include <linux/module.h>
@@ -106,7 +107,7 @@ socle_rtc_get_time(struct device *dev, struct rtc_time *rtc_tm)
 	mon = (reg_date >> SOCLE_RTC_DATE_M) & 0x0f;
 	/* get ten mon */
 	mon += ((reg_date >> SOCLE_RTC_DATE_TM) & 0x01) * 10;
-	rtc_tm->tm_mon = mon-1;
+	rtc_tm->tm_mon = mon - 1;
 
 	/* get year */
 	year = (reg_date >> SOCLE_RTC_DATE_Y) & 0x0f;
@@ -138,43 +139,42 @@ socle_rtc_set_time(struct device *dev, struct rtc_time *tm)
 
 	RTCDBUG("%04d/%02d/%02d %02d:%02d:%02d w(%d)\n", tm->tm_year+1900, tm->tm_mon, tm->tm_mday,
 						tm->tm_hour, tm->tm_min, tm->tm_sec, tm->tm_wday);
-	
-	/* get day of week */
+
+	/* set day of week */
 	reg_time = (tm->tm_wday) << SOCLE_RTC_TIME_DOW;
-	
-	/* get ten hours */
+
+	/* set ten hours */
 	reg_time |= (tm->tm_hour / 10) << SOCLE_RTC_TIME_TH;
-	/* get hours */
+	/* set hours */
 	reg_time |= (tm->tm_hour % 10) << SOCLE_RTC_TIME_H;
-	
-	/* get ten minutes */
+
+	/* set ten minutes */
 	reg_time |= (tm->tm_min / 10) << SOCLE_RTC_TIME_TM;
-	/* get minutes */
+	/* set minutes */
 	reg_time |= (tm->tm_min % 10) << SOCLE_RTC_TIME_M;
-	
-	/* get ten secondss */
+
+	/* set ten secondss */
 	reg_time |= (tm->tm_sec / 10) << SOCLE_RTC_TIME_TS;
-	/* get secondss */
+	/* set secondss */
 	reg_time |= (tm->tm_sec % 10) << SOCLE_RTC_TIME_S;
 
-
-	/* get ten century */
+	/* set ten century */
 	reg_date = (tm->tm_year / 1000) << SOCLE_RTC_DATE_TC;
-	/* get century */
+	/* set century */
 	reg_date |= ((tm->tm_year / 100) % 10) << SOCLE_RTC_DATE_C;
-	/* get ten year */
+	/* set ten year */
 	reg_date |= ((tm->tm_year / 10) % 10) << SOCLE_RTC_DATE_TY;
-	/* get year */
+	/* set year */
 	reg_date |= (tm->tm_year % 10) << SOCLE_RTC_DATE_Y;
-	
-	/* get ten mon */
+
+	/* set ten mon */
 	reg_date |= (tm->tm_mon / 10) << SOCLE_RTC_DATE_TM;
-	/* get mon */
+	/* set mon */
 	reg_date |= (tm->tm_mon % 10) << SOCLE_RTC_DATE_M;
-	
-	/* get ten day */
+
+	/* set ten day */
 	reg_date |= (tm->tm_mday / 10) << SOCLE_RTC_DATE_TD;
-	/* get day */
+	/* set day */
 	reg_date |= (tm->tm_mday % 10) << SOCLE_RTC_DATE_D;
 
 	rtc_ctrl_reg &= ~SOCLE_RTC_CTRL_EN;
@@ -212,13 +212,13 @@ socle_rtc_get_alarm(struct device *dev, struct rtc_wkalrm *alarm)
 	/* get ten secondss */
 	sec += ((reg_time >> SOCLE_RTC_TIME_TS) & 0x07) * 10;
 	alm_tm->tm_sec = sec;
-	
+
 	/* get minutes */
 	mn = (reg_time >> SOCLE_RTC_TIME_M) & 0x0f;
 	/* get ten minutes */
 	mn += ((reg_time >> SOCLE_RTC_TIME_TM) & 0x07) * 10;
 	alm_tm->tm_min = mn;
-	
+
 	/* get hours */
 	hr = (reg_time >> SOCLE_RTC_TIME_H) & 0x0f;
 	/* get ten hours */
@@ -228,19 +228,19 @@ socle_rtc_get_alarm(struct device *dev, struct rtc_wkalrm *alarm)
 	/* get day of week */
 	wday = (reg_time >> SOCLE_RTC_TIME_DOW) & 0x07;
 	alm_tm->tm_wday= wday;
-	
+
 	/* get day */
 	day = (reg_date >> SOCLE_RTC_DATE_D) & 0x0f;
 	/* get ten day */
 	day += ((reg_date >> SOCLE_RTC_DATE_TD) & 0x03) * 10;
 	alm_tm->tm_mday = day;
-	
+
 	/* get mon */
 	mon = (reg_date >> SOCLE_RTC_DATE_M) & 0x0f;
 	/* get ten mon */
 	mon += ((reg_date >> SOCLE_RTC_DATE_TM) & 0x01) * 10;
-	alm_tm->tm_mon = mon;
-	
+	alm_tm->tm_mon = mon - 1;
+
 	/* get year */
 	year = (reg_date >> SOCLE_RTC_DATE_Y) & 0x0f;
 	/* get ten year */
@@ -271,74 +271,74 @@ socle_rtc_set_alarm(struct device *dev, struct rtc_wkalrm *alarm)
 
 	spin_lock_irqsave(&socle_rtc_lock, flags);
 
+	tm->tm_mon++; /* conversion tm_mon(0..11) to (1..12)*/
+
 	RTCDBUG("%04d/%02d/%02d %02d:%02d:%02d w(%d)\n", tm->tm_year+1900, tm->tm_mon, tm->tm_mday,
 						tm->tm_hour, tm->tm_min, tm->tm_sec, tm->tm_wday);
 
 //DAY
-	/* get day of week */
-	if (tm->tm_wday < 8 && tm->tm_wday >= 1) {
+	/* set day of week */
+	if (tm->tm_wday <= 7 && tm->tm_wday >= 1) {
 		talrm_en |= SOCLE_RTC_TALRM_CDOW;
 	}
 	reg_time = (tm->tm_wday) << SOCLE_RTC_TIME_DOW;
+
 //HR
-	/* get ten hours */
-	if (tm->tm_hour < 24 && tm->tm_hour >= 0) {
+	/* set ten hours */
+	if (tm->tm_hour <= 23 && tm->tm_hour >= 0) {
 		talrm_en |= SOCLE_RTC_TALRM_CH;
 	}
 	reg_time |= (tm->tm_hour / 10) << SOCLE_RTC_TIME_TH;
-
-	/* get hours */
+	/* set hours */
 	reg_time |= (tm->tm_hour % 10) << SOCLE_RTC_TIME_H;
+
 //MIN
-	/* get ten minutes */
-	if (tm->tm_min < 60 && tm->tm_min >= 0) {
+	/* set ten minutes */
+	if (tm->tm_min <= 59 && tm->tm_min >= 0) {
 		talrm_en |= SOCLE_RTC_TALRM_CM;
 	}
 	reg_time |= (tm->tm_min / 10) << SOCLE_RTC_TIME_TM;
-	/* get minutes */
+	/* set minutes */
 	reg_time |= (tm->tm_min % 10) << SOCLE_RTC_TIME_M;
+
 //SEC
-	/* get ten secondss */
-	if (tm->tm_sec < 60 && tm->tm_sec >= 0) {
+	/* set ten secondss */
+	if (tm->tm_sec <= 59 && tm->tm_sec >= 0) {
 		talrm_en |= SOCLE_RTC_TALRM_CS;
 	}
 	reg_time |= (tm->tm_sec / 10) << SOCLE_RTC_TIME_TS;
-	/* get secondss */
+	/* set secondss */
 	reg_time |= (tm->tm_sec % 10) << SOCLE_RTC_TIME_S;
 
-//CC
-	/* get ten century */
-	if (tm->tm_year < 9999 && tm->tm_year >= 1) {
+//YEAR
+	/* set ten century */
+	if (tm->tm_year <= 9999 && tm->tm_year >= 0) {
 		dalrm_en |= SOCLE_RTC_DALRM_CC | SOCLE_RTC_DALRM_CY;
 	}
 	reg_date = (tm->tm_year / 1000) << SOCLE_RTC_DATE_TC;
-	/* get century */
+	/* set century */
 	reg_date |= ((tm->tm_year / 100) % 10) << SOCLE_RTC_DATE_C;
-//YEAR
-	/* get ten year */
-	//if (tm->tm_year < 9999 && tm->tm_year >= 100) {
-	//	alrm_en |= RTC_DALRM_CC;
-	//}
+	/* set ten year */
 	reg_date |= ((tm->tm_year / 10) % 10) << SOCLE_RTC_DATE_TY;
-	/* get year */
+	/* set year */
 	reg_date |= (tm->tm_year % 10) << SOCLE_RTC_DATE_Y;
+
 //MON
-	/* get ten mon */
-	if (tm->tm_mon < 12 && tm->tm_mon >= 1) {
+	/* set ten mon */
+	if (tm->tm_mon <= 12 && tm->tm_mon >= 1) {
 		dalrm_en |= SOCLE_RTC_DALRM_CM;
 	}
-	//tm->tm_mon++; /* conversion tm_mon(0..11) to (1..12)*/
 	reg_date |= (tm->tm_mon / 10) << SOCLE_RTC_DATE_TM;
-	/* get mon */
+	/* set mon */
 	reg_date |= (tm->tm_mon % 10) << SOCLE_RTC_DATE_M;
+
 //DAY
-	if (tm->tm_mday < 32 && tm->tm_mday >= 1) {
+	if (tm->tm_mday <= 31 && tm->tm_mday >= 1) {
 		dalrm_en |= SOCLE_RTC_DALRM_CD;
 	}
-
-	/* get ten day */
+	/* set ten day */
 	reg_date |= (tm->tm_mday / 10) << SOCLE_RTC_DATE_TD;
-	/* get day */
+	/* set day */
 	reg_date |= (tm->tm_mday % 10) << SOCLE_RTC_DATE_D;
 
    	rtc_talrm_reg = (reg_time & ~0xf8000000) | talrm_en;
@@ -640,6 +640,7 @@ socle_rtc_probe(struct platform_device *pdev)
 //	socle_rtc_enable(pdev, 1);
 
 	//Initial time
+#if 0
 	tm.tm_wday = 2;
 	tm.tm_year = 1970 - 1900;
 	tm.tm_mon = 1 - 1;
@@ -652,12 +653,10 @@ socle_rtc_probe(struct platform_device *pdev)
 
 	//wait for set time really
 	check = tm.tm_year;
-#if !defined(CONFIG_SQ_GDR)	
-	//demo board bug....channninglan
 	do {
 		socle_rtc_get_time(&pdev->dev, &tm);
 	} while (check !=  tm.tm_year);
-#endif 
+#endif
 	ret = request_irq(irq, socle_rtc_irq,
 //			  IRQF_DISABLED,  "socle-rtc", pdev);
 			  IRQF_DISABLED,  "socle-rtc", rtc);

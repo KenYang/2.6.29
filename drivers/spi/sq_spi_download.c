@@ -201,9 +201,11 @@ static ssize_t sq_spi_download_write(struct file *file, const char __user *data,
 	struct spi_transfer xfer;
 	//char buf[128];
 	char *buf;
-	
+
 	buf = kmalloc(len,GFP_KERNEL);
-	
+	if(!buf){
+		return -ENOMEM;
+	}
 	
 	
 	if(copy_from_user(buf,data,len)) {
